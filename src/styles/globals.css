@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Mapbox CSS override to prevent conflicts */
+.mapboxgl-map {
+  font-family: inherit;
+}
+
+.mapboxgl-ctrl-attrib {
+  font-size: 11px;
+}
+
+/* Dark mode support */
+.dark {
+  color-scheme: dark;
+}

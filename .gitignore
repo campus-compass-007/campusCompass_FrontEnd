@@ -113,6 +113,3 @@ storybook-static
 # Temporary folders
 tmp/
 temp/
-
-# Runtime configuration files
-.env.example

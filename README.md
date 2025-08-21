@@ -23,10 +23,22 @@ A React-based mobile campus navigation app with MongoDB backend integration.
    npm install
    ```
 
-2. **Start Development Server**
+
+2. **Environment Configuration**
+   ```bash
+   # Copy the example environment file
+   cp envExample.md .env
+   
+   # Add your Mapbox token to .env
+   # Get your token from: https://account.mapbox.com/access-tokens/
+   VITE_MAPBOX_TOKEN=your_actual_mapbox_token_here
+   ```
+
+3. **Start Development Server**
    ```bash
    npm run dev
-   # App runs on http://localhost:5173
+   # App runs on http://localhost:3001
+
    ```
 
 ## 📋 Development Scripts

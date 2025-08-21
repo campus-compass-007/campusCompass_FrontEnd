@@ -3,10 +3,7 @@ export default {
   darkMode: ["class"],
   content: [
     "./index.html",
-    "./App.tsx",
-    "./main.tsx",
-    "./components/**/*.{ts,tsx}",
-    "./styles/**/*.css",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   prefix: "",
   theme: {
