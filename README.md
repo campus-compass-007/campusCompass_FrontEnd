@@ -18,7 +18,7 @@ A React-based mobile campus navigation app with MongoDB backend integration.
 
 1. **Clone and Install**
    ```bash
-   git clone https://github.com/[organization-name]/campusCompass_FrontEnd.git
+   git clone https://github.com/campus-compass-007/campusCompass_FrontEnd.git
    cd campusCompass_FrontEnd
    npm install
    ```
@@ -240,9 +240,9 @@ npm run build
 
 ### Branch Strategy
 - `main` - Production ready code
-- `develop` - Integration branch
-- `feature/*` - New features
-- `bugfix/*` - Bug fixes
+- `test` - Integration branch
+- `your_named_branch` - self testing and development
+
 
 ### Code Standards
 - **ESLint** configuration enforces code quality
