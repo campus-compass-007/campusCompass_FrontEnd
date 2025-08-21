@@ -23,6 +23,7 @@ A React-based mobile campus navigation app with MongoDB backend integration.
    npm install
    ```
 
+
 2. **Environment Configuration**
    ```bash
    # Copy the example environment file
@@ -37,6 +38,7 @@ A React-based mobile campus navigation app with MongoDB backend integration.
    ```bash
    npm run dev
    # App runs on http://localhost:3001
+
    ```
 
 ## 📋 Development Scripts
