@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Minus, Navigation } from 'lucide-react';
+import { Navigation } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import { CAMPUS_CONFIG } from '../config/campus';
 
@@ -28,7 +28,7 @@ const mockLocations: Location[] = [
 ];
 
 export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapViewProps) {
-  const [zoom, setZoom] = useState(CAMPUS_CONFIG.defaultZoom);
+  const [zoom] = useState(CAMPUS_CONFIG.defaultZoom);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -149,16 +149,6 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
       case 'gas_station': return '#eab308';
       default: return '#6b7280';
     }
-  };
-
-  const zoomIn = () => {
-    const newZoom = Math.min(zoom + 1, 18);
-    setZoom(newZoom);
-  };
-
-  const zoomOut = () => {
-    const newZoom = Math.max(zoom - 1, 1);
-    setZoom(newZoom);
   };
 
   const handleLocationClick = (location: Location) => {

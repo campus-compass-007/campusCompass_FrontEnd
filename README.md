@@ -26,7 +26,7 @@ A React-based mobile campus navigation app with MongoDB backend integration.
 2. **Environment Configuration**
    ```bash
    # Copy the example environment file
-   cp .env.example .env
+   cp envExample.md .env
    
    # Add your Mapbox token to .env
    # Get your token from: https://account.mapbox.com/access-tokens/
