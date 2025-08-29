@@ -34,7 +34,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
   const markersRef = useRef<mapboxgl.Marker[]>([]);
 
   // Set Mapbox access token
-  mapboxgl.accessToken = (import.meta as any).env.VITE_MAPBOX_TOKEN || '';
+  mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
   // Initialize map
   useEffect(() => {
@@ -201,11 +201,6 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
         >
           <Navigation className="w-6 h-6 text-blue-600" />
         </button>
-      </div>
-
-      {/* Zoom Level Indicator */}
-      <div className={`absolute bottom-4 left-4 ${isDarkMode ? 'bg-gray-800' : 'bg-black'} bg-opacity-60 text-white px-2 py-1 rounded text-sm z-10`}>
-        Zoom: {zoom}
       </div>
     </div>
   );
