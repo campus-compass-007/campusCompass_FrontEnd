@@ -83,8 +83,12 @@ export function LandingPage() {
       <div className="relative z-10 flex flex-col items-center justify-start min-h-screen px-4 py-8 md:justify-center">
         {/* Header */}
         <div className="text-center mb-6 md:mb-8">
-          <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-2xl">
-            <MapPin className="w-8 h-8 md:w-10 md:h-10 text-purple-600" />
+          <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-2xl p-2 md:p-3">
+            <img 
+              src="/assets/campus-compass-logo.png" 
+              alt="CampusCompass Logo" 
+              className="w-12 h-12 md:w-14 md:h-14 object-contain"
+            />
           </div>
           <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-3 md:mb-4">
             CampusCompass

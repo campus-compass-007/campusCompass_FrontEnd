@@ -1,4 +1,4 @@
-import { Moon, Sun, MapPin } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 
 interface TopNavProps {
   isDarkMode: boolean;
@@ -12,7 +12,11 @@ export function TopNav({ isDarkMode, onToggleDarkMode }: TopNavProps) {
         {/* App Logo */}
         <div className="flex items-center">
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">
-            <MapPin className="w-5 h-5 text-purple-600" />
+            <img 
+              src="/assets/campus-compass-logo.png" 
+              alt="CampusCompass Logo" 
+              className="w-6 h-6 object-contain"
+            />
           </div>
           <h1 className="text-white text-xl font-semibold">CampusCompass</h1>
         </div>
