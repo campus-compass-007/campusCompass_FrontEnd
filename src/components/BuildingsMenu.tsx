@@ -43,13 +43,13 @@ export function BuildingsMenu({ isOpen, onClose }: BuildingsMenuProps) {
       {/* Backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-200"
           onClick={onClose}
         />
       )}
       
       {/* Sliding Menu */}
-      <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 z-50 transform transition-transform duration-300 ease-out ${
+      <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 z-50 transform transition-transform duration-200 ease-out ${
         isOpen ? 'translate-y-0' : 'translate-y-full'
       }`}>
         <div className="max-h-[80vh] flex flex-col">
@@ -58,7 +58,7 @@ export function BuildingsMenu({ isOpen, onClose }: BuildingsMenuProps) {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Campus Buildings</h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 rounded-lg transition-colors duration-150 hover-purple-close"
             >
               <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -79,12 +79,12 @@ export function BuildingsMenu({ isOpen, onClose }: BuildingsMenuProps) {
           </div>
 
           {/* Buildings List */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto pb-20">
             {filteredBuildings.map((building) => (
               <button
                 key={building.id}
                 onClick={() => handleBuildingSelect(building)}
-                className="w-full flex items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                className="w-full flex items-center p-4 transition-colors duration-150 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover-purple-transparent"
               >
                 {/* Building Image */}
                 <div className="w-16 h-16 mr-4 flex-shrink-0">

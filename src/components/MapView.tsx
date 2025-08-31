@@ -75,7 +75,15 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
   useEffect(() => {
     if (mapInstanceRef.current) {
       const newStyle = isDarkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12';
-      mapInstanceRef.current.setStyle(newStyle);
+      
+      // Add a small delay to prevent flashing during transitions
+      const timeoutId = setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setStyle(newStyle);
+        }
+      }, 50);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [isDarkMode]);
 

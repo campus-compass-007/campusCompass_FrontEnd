@@ -7,11 +7,38 @@
   box-sizing: border-box;
 }
 
+html {
+  color-scheme: light dark;
+  transition: color-scheme 0.1s ease;
+}
+
 html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
+  background-color: #ffffff;
+  transition: background-color 0.1s ease;
+}
+
+/* Allow scrolling on mobile for landing page */
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Only hide overflow for the app routes */
+body.app-route {
   overflow: hidden;
+}
+
+/* Dark mode styles */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark, html.dark body, html.dark #root {
+  background-color: #1f2937;
 }
 
 /* Mapbox CSS override to prevent conflicts */
@@ -26,4 +53,64 @@ html, body, #root {
 /* Dark mode support */
 .dark {
   color-scheme: dark;
+}
+
+/* Prevent flash on hover in dark mode */
+.dark button {
+  will-change: background-color;
+  contain: layout style;
+}
+
+/* Improve transitions for better performance */
+.transition-colors {
+  will-change: background-color, color;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Smooth backdrop transitions */
+.backdrop-blur {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Custom purple hover colors matching TopNav */
+.hover-purple-light:hover {
+  background-color: #f3f1f7;
+}
+
+.hover-purple-medium:hover {
+  background-color: #e9e5f2;
+}
+
+/* Custom purple hover with transparency for both modes */
+.hover-purple-transparent:hover {
+  background-color: rgba(108, 61, 145, 0.2) !important;
+}
+
+.hover-purple-close:hover {
+  background-color: rgba(108, 61, 145, 0.25) !important;
+}
+
+/* Prevent screen flashing in dark mode */
+.hover-purple-transparent {
+  isolation: isolate;
+  contain: layout style paint;
+}
+
+.hover-purple-close {
+  isolation: isolate;
+  contain: layout style paint;
+}
+
+/* Emergency contact hover isolation */
+.hover-red-emergency {
+  isolation: isolate;
+  contain: layout style paint;
+}
+
+/* Force hardware acceleration for smooth transitions */
+.transition-colors {
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
