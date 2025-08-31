@@ -5,6 +5,7 @@ import { BuildingsMenu } from './components/BuildingsMenu';
 import { ContactsMenu } from './components/ContactsMenu';
 import { BottomNav } from './components/BottomNav';
 import { TopNav } from './components/TopNav';
+import { PWAUpdateNotification } from './components/PWAUpdateNotification';
 
 interface Location {
   id: string;
@@ -22,13 +23,20 @@ export default function App() {
   const [showBuildingsMenu, setShowBuildingsMenu] = useState(false);
   const [showContactsMenu, setShowContactsMenu] = useState(false);
 
-  // Apply dark mode class to document element
+  // Apply dark mode class to document element with smooth transition
   useEffect(() => {
+    const htmlElement = document.documentElement;
+    
     if (isDarkMode) {
-      document.documentElement.classList.add('dark');
+      htmlElement.classList.add('dark');
+      htmlElement.style.colorScheme = 'dark';
     } else {
-      document.documentElement.classList.remove('dark');
+      htmlElement.classList.remove('dark');
+      htmlElement.style.colorScheme = 'light';
     }
+    
+    // Force a repaint to prevent flashing
+    void htmlElement.offsetHeight;
   }, [isDarkMode]);
 
   const handleLocationSelect = (location: Location) => {
@@ -114,6 +122,9 @@ export default function App() {
         onBuildingsClick={handleBuildingsClick}
         onContactsClick={handleContactsClick}
       />
+
+      {/* PWA Update Notification */}
+      <PWAUpdateNotification />
     </div>
   );
 }

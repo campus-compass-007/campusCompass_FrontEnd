@@ -2,10 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <link href='https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css' rel='stylesheet' />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mobile Map Application</title>
+    
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#6c3d91" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="CampusCompass" />
+    
+    <!-- SEO and Description -->
+    <title>CampusCompass - NWU Potchefstroom Campus Navigation</title>
+    <meta name="description" content="Navigate North West University Potchefstroom Campus with ease. Interactive maps, building locations, and emergency contacts." />
+    <meta name="keywords" content="NWU, North West University, Potchefstroom, campus, navigation, map, students" />
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    
+    <!-- Mapbox CSS -->
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css' rel='stylesheet' />
+    
+    <!-- Preconnect to improve performance -->
+    <link rel="preconnect" href="https://api.mapbox.com" />
   </head>
   <body>
     <div id="root"></div>

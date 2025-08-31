@@ -55,13 +55,13 @@ export function ContactsMenu({ isOpen, onClose }: ContactsMenuProps) {
       {/* Backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-200"
           onClick={onClose}
         />
       )}
       
       {/* Sliding Menu */}
-      <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 z-50 transform transition-transform duration-300 ease-out ${
+      <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 z-50 transform transition-transform duration-200 ease-out ${
         isOpen ? 'translate-y-0' : 'translate-y-full'
       }`}>
         <div className="max-h-[80vh] flex flex-col">
@@ -70,7 +70,7 @@ export function ContactsMenu({ isOpen, onClose }: ContactsMenuProps) {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Campus Directory</h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 rounded-lg transition-colors duration-150 hover-purple-close"
             >
               <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -91,13 +91,13 @@ export function ContactsMenu({ isOpen, onClose }: ContactsMenuProps) {
           </div>
 
           {/* Contacts List */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto pb-20">
             {/* Emergency Contact - Highlighted */}
             {emergencyContact && (
               <div className="bg-red-50 dark:bg-red-900/20 border-b-2 border-red-200 dark:border-red-800">
                 <button
                   onClick={() => handleContactCall(emergencyContact)}
-                  className="w-full flex items-center p-4 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                  className="w-full flex items-center p-4 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-150 hover-red-emergency"
                 >
                   {/* Emergency Icon */}
                   <div className="w-12 h-12 mr-4 flex-shrink-0 bg-red-500 rounded-full flex items-center justify-center">
@@ -128,7 +128,7 @@ export function ContactsMenu({ isOpen, onClose }: ContactsMenuProps) {
               <button
                 key={contact.id}
                 onClick={() => handleContactCall(contact)}
-                className="w-full flex items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                className="w-full flex items-center p-4 transition-colors duration-150 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover-purple-transparent"
               >
                 {/* Contact Icon */}
                 <div className="w-12 h-12 mr-4 flex-shrink-0 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
