@@ -22,6 +22,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [showBuildingsMenu, setShowBuildingsMenu] = useState(false);
   const [showContactsMenu, setShowContactsMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Apply dark mode class to document element with smooth transition
   useEffect(() => {
@@ -79,12 +80,22 @@ export default function App() {
     setShowContactsMenu(false); // Close contacts menu
   };
 
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    // If user is searching, automatically open buildings menu
+    if (query.trim() && !showBuildingsMenu) {
+      setShowBuildingsMenu(true);
+      setActiveTab('buildings');
+    }
+  };
+
   return (
     <div className="h-screen w-full flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
       {/* Top Bar */}
       <TopNav 
         isDarkMode={isDarkMode}
         onToggleDarkMode={toggleDarkMode}
+        onSearch={handleSearch}
       />
 
       {/* Map View */}
@@ -107,6 +118,7 @@ export default function App() {
       <BuildingsMenu
         isOpen={showBuildingsMenu}
         onClose={handleCloseBuildingsMenu}
+        searchQuery={searchQuery}
       />
 
       {/* Contacts Menu */}
