@@ -20,8 +20,8 @@ export const NWU_BUILDINGS: CampusBuilding[] = [
     name: 'Faculty of Engineering',
     shortName: 'Engineering',
     address: 'North West University, Potchefstroom',
-    lat: -26.6906, // TODO: Add real coordinates
-    lng: 27.0933,
+    lat: -26.6850, // Within campus bounds
+    lng: 27.0920,
     type: 'academic',
     description: 'Engineering faculty building',
     facilities: ['Computer Labs', 'Lecture Halls', 'Engineering Labs']
@@ -31,8 +31,8 @@ export const NWU_BUILDINGS: CampusBuilding[] = [
     name: 'Faculty of Natural and Agricultural Sciences',
     shortName: 'Nat & Agri Sciences',
     address: 'North West University, Potchefstroom',
-    lat: -26.6906, // TODO: Add real coordinates
-    lng: 27.0933,
+    lat: -26.6880, // Within campus bounds
+    lng: 27.0950,
     type: 'academic',
     description: 'Natural and Agricultural Sciences faculty',
     facilities: ['Science Labs', 'Lecture Halls', 'Research Centers']
@@ -42,8 +42,8 @@ export const NWU_BUILDINGS: CampusBuilding[] = [
     name: 'Ferdinand Postma Library',
     shortName: 'Main Library',
     address: 'North West University, Potchefstroom',
-    lat: -26.6906, // TODO: Add real coordinates
-    lng: 27.0933,
+    lat: -26.6900, // Within campus bounds (center area)
+    lng: 27.0950,
     type: 'library',
     description: 'Main university library',
     facilities: ['Study Areas', 'Computer Lab', 'Archives', 'Group Study Rooms']
@@ -53,8 +53,8 @@ export const NWU_BUILDINGS: CampusBuilding[] = [
     name: 'Administration Building',
     shortName: 'Admin',
     address: 'North West University, Potchefstroom',
-    lat: -26.6906, // TODO: Add real coordinates
-    lng: 27.0933,
+    lat: -26.6890, // Within campus bounds
+    lng: 27.0980,
     type: 'administration',
     description: 'Main administration building',
     facilities: ['Student Services', 'Registrar', 'Finance Office']
@@ -64,8 +64,8 @@ export const NWU_BUILDINGS: CampusBuilding[] = [
     name: 'Sports Complex',
     shortName: 'Sports',
     address: 'North West University, Potchefstroom',
-    lat: -26.6906, // TODO: Add real coordinates
-    lng: 27.0933,
+    lat: -26.6800, // Within campus bounds (north area)
+    lng: 27.0970,
     type: 'sports',
     description: 'Main sports and recreation complex',
     facilities: ['Gymnasium', 'Swimming Pool', 'Sports Fields', 'Fitness Center']
@@ -76,8 +76,8 @@ export const NWU_BUILDINGS: CampusBuilding[] = [
     name: 'Vergeet-My-Nie',
     shortName: 'VMN',
     address: 'North West University, Potchefstroom',
-    lat: -26.6906, // TODO: Add real coordinates
-    lng: 27.0933,
+    lat: -26.6920, // Within campus bounds (south area)
+    lng: 27.0900,
     type: 'residence',
     description: 'Student residence',
     facilities: ['Dining Hall', 'Study Areas', 'Recreation Room']
@@ -87,12 +87,46 @@ export const NWU_BUILDINGS: CampusBuilding[] = [
     name: 'Heimat',
     shortName: 'Heimat',
     address: 'North West University, Potchefstroom',
-    lat: -26.6906, // TODO: Add real coordinates
-    lng: 27.0933,
+    lat: -26.6940, // Within campus bounds (south area)
+    lng: 27.0930,
     type: 'residence',
     description: 'Student residence',
     facilities: ['Dining Hall', 'Study Areas', 'Recreation Room']
   },
+  // Additional campus buildings
+  {
+    id: 'building-a3',
+    name: 'Faculty of Education',
+    shortName: 'Education',
+    address: 'North West University, Potchefstroom',
+    lat: -26.6860,
+    lng: 27.0980,
+    type: 'academic',
+    description: 'Education faculty building',
+    facilities: ['Lecture Halls', 'Computer Labs', 'Teaching Practice Rooms']
+  },
+  {
+    id: 'building-a4',
+    name: 'Faculty of Economic and Management Sciences',
+    shortName: 'Economics',
+    address: 'North West University, Potchefstroom',
+    lat: -26.6870,
+    lng: 27.1000,
+    type: 'academic',
+    description: 'Economics and Management Sciences faculty',
+    facilities: ['Lecture Halls', 'Seminar Rooms', 'Computer Labs']
+  },
+  {
+    id: 'building-dining1',
+    name: 'Main Dining Hall',
+    shortName: 'Dining Hall',
+    address: 'North West University, Potchefstroom',
+    lat: -26.6910,
+    lng: 27.0940,
+    type: 'dining',
+    description: 'Main campus dining facility',
+    facilities: ['Food Court', 'Cafeteria', 'Coffee Shop']
+  }
   // Add more buildings as needed...
 ];
 
