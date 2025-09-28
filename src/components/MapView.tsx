@@ -10,7 +10,7 @@ interface Location {
   address: string;
   lat: number;
   lng: number;
-  type: 'restaurant' | 'store' | 'landmark' | 'gas_station';
+  type: 'restaurant' | 'store' | 'landmark' | 'gas_station' | 'recreational' | 'residential' | 'health' | 'security' | 'library';
 }
 
 interface MapViewProps {
@@ -49,10 +49,15 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
 
   const getMarkerBackgroundColor = (type: string) => {
     switch (type) {
-      case 'restaurant': return '#ef4444'; // Red for dining
+      case 'restaurant': return '#00ffddff'; // Cyan for dining
       case 'store': return '#3b82f6';      // Blue for library/services
       case 'landmark': return '#22c55e';   // Green for academic/general buildings
       case 'gas_station': return '#eab308'; // Yellow for sports/special facilities
+      case 'recreational': return '#00741dff';   // dark Green for recreational
+      case 'residential': return '#d97706'; // Orange for residential
+      case 'library': return '#ffffffff';      // White for library
+      case 'health': return '#ff0707ff';      // Red for health services
+      case 'security': return '#000000ff';   // Black for security
       default: return '#6c3d91';           // Purple (campus theme) for others
     }
   };
@@ -218,9 +223,22 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
           background-color: ${getMarkerBackgroundColor(location.type)};
         `;
 
-        // Add icon to marker
+        // Add custom emoji icon based on location type
         const icon = document.createElement('div');
-        icon.innerHTML = '📍';
+        let emoji = '📍';
+        switch (location.type) {
+          case 'restaurant': emoji = '🍽'; break;
+          case 'library': emoji = '📚'; break;
+          case 'store': emoji = '🛒'; break;
+          case 'landmark': emoji = '🏛️'; break;
+          case 'gas_station': emoji = '⛽'; break;
+          case 'recreational': emoji = '💬'; break;
+          case 'residential': emoji = '🏠'; break;
+          case 'health': emoji = '👨‍⚕️'; break;
+          case 'security': emoji = '🛡️'; break;
+          default: emoji = '📍';
+        }
+        icon.innerHTML = emoji;
         icon.style.fontSize = '16px';
         markerElement.appendChild(icon);
 
