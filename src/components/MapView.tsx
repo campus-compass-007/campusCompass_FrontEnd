@@ -4,6 +4,7 @@ import mapboxgl from 'mapbox-gl';
 import { CAMPUS_CONFIG } from '../config/campus';
 import { NWU_BUILDINGS } from '../data/campusBuildings';
 import { Location } from '../types';
+import axios from 'axios';
 
 interface MapViewProps {
   onLocationSelect: (location: Location) => void;
@@ -25,12 +26,32 @@ const campusLocations: Location[] = NWU_BUILDINGS.map(building => ({
 }));
 
 export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapViewProps) {
+  const [locations,setLocations] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [zoom] = useState(CAMPUS_CONFIG.defaultZoom);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const onLocationSelectRef = useRef(onLocationSelect);
 
+  useEffect(() => {
+    const getBuildings = async () => {
+      try{
+        const res = await axios.get("http://localhost:4000/api/locations").then((res) =>{
+          console.log(res.data)
+          setLocations(res.data)
+        })
+      } catch(err) {
+        setError('Failed loading Buildings')
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    getBuildings()
+  },[])
+  
   // Update the ref when onLocationSelect changes
   useEffect(() => {
     onLocationSelectRef.current = onLocationSelect;
@@ -198,7 +219,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
 
-      campusLocations.forEach((location) => {
+      locations.forEach((location) => {
         // Create a DOM element for the marker
         const markerElement = document.createElement('div');
         markerElement.className = 'custom-marker';
