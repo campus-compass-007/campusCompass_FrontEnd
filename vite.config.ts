@@ -3,11 +3,13 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     VitePWA({
       registerType: 'prompt',
+      // Disable service worker in development
+      disable: command === 'serve',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
         name: 'CampusCompass - NWU Potchefstroom Navigation',
@@ -74,5 +76,9 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
+    // Disable caching in development
+    headers: {
+      'Cache-Control': 'no-store',
+    },
   }
-})
+}))
