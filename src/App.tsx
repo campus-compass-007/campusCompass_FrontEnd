@@ -6,15 +6,7 @@ import { ContactsMenu } from './components/ContactsMenu';
 import { BottomNav } from './components/BottomNav';
 import { TopNav } from './components/TopNav';
 import { PWAUpdateNotification } from './components/PWAUpdateNotification';
-
-interface Location {
-  id: string;
-  name: string;
-  address: string;
-  lat: number;
-  lng: number;
-  type: 'restaurant' | 'store' | 'landmark' | 'gas_station';
-}
+import { Location } from './types';
 
 export default function App() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);

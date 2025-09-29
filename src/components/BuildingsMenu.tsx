@@ -1,19 +1,6 @@
 import { useState } from 'react';
 import { X, ChevronRight } from 'lucide-react';
-
-interface Building {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-}
-
-interface Office {
-  id: string;
-  officeNumber: string;
-  lecturer: string;
-  department: string;
-}
+import { Building, Office } from '../types';
 
 interface BuildingsMenuProps {
   isOpen: boolean;

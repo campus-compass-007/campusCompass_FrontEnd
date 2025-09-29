@@ -3,15 +3,7 @@ import { Navigation } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import { CAMPUS_CONFIG } from '../config/campus';
 import { NWU_BUILDINGS } from '../data/campusBuildings';
-
-interface Location {
-  id: string;
-  name: string;
-  address: string;
-  lat: number;
-  lng: number;
-  type: 'restaurant' | 'store' | 'landmark' | 'gas_station' | 'recreational' | 'residential' | 'health' | 'security' | 'library';
-}
+import { Location } from '../types';
 
 interface MapViewProps {
   onLocationSelect: (location: Location) => void;

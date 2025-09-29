@@ -1,13 +1,5 @@
 import { MapPin, Phone, Clock, Star, Navigation, Share, Heart } from 'lucide-react';
-
-interface Location {
-  id: string;
-  name: string;
-  address: string;
-  lat: number;
-  lng: number;
-  type: 'restaurant' | 'store' | 'landmark' | 'gas_station';
-}
+import { Location } from '../types';
 
 interface BottomSheetProps {
   location: Location | null;
@@ -44,6 +36,41 @@ const getLocationDetails = (location: Location) => {
       hours: 'Open 24 hours',
       phone: '+1 (555) 321-0987',
       description: 'Full service gas station with convenience store',
+    },
+    recreational: {
+      rating: 4.6,
+      reviews: 2341,
+      hours: 'Open until 8:00 PM',
+      phone: '+1 (555) 234-5678',
+      description: 'Campus recreational facility and sports center',
+    },
+    residential: {
+      rating: 4.3,
+      reviews: 789,
+      hours: '24/7 Access',
+      phone: '+1 (555) 345-6789',
+      description: 'Student residence and housing facility',
+    },
+    health: {
+      rating: 4.7,
+      reviews: 1456,
+      hours: 'Open until 6:00 PM',
+      phone: '+1 (555) 456-7890',
+      description: 'Campus health center and medical services',
+    },
+    security: {
+      rating: 4.4,
+      reviews: 234,
+      hours: '24/7 Service',
+      phone: '+1 (555) 567-8901',
+      description: 'Campus security and emergency services',
+    },
+    library: {
+      rating: 4.8,
+      reviews: 3456,
+      hours: 'Open until 11:00 PM',
+      phone: '+1 (555) 678-9012',
+      description: 'Academic library and study facility',
     },
   };
 
