@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, ChevronRight } from 'lucide-react';
 import { Building, Office } from '../types';
+import axios from 'axios';
 
 interface BuildingsMenuProps {
   isOpen: boolean;
   onClose: () => void;
   searchQuery?: string;
 }
+
 
 const mockBuildings: Building[] = [
   { id: '1', name: 'Building 1', description: 'Main Academic Building', image: '/api/placeholder/60/60' },
@@ -31,11 +33,16 @@ const mockOffices: Office[] = [
 ];
 
 export function BuildingsMenu({ isOpen, onClose, searchQuery = '' }: BuildingsMenuProps) {
+  const [buildings,setBuildings] = useState([])
+  useEffect(()=>{
+    axios.get(`http://${import.meta.env.VITE_API_GATEWAY_URL}/api/buildings`).then((res) => {
+      setBuildings(res.data)
+    })
+  }, [])
   const [activeTab, setActiveTab] = useState<'buildings' | 'offices'>('buildings');
 
-  const filteredBuildings = mockBuildings.filter(building =>
-    building.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    building.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredBuildings = buildings.filter(building =>
+    building.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const filteredOffices = mockOffices.filter(office =>
@@ -115,7 +122,7 @@ export function BuildingsMenu({ isOpen, onClose, searchQuery = '' }: BuildingsMe
               <>
                 {filteredBuildings.map((building) => (
                   <button
-                    key={building.id}
+                    key={building._id}
                     onClick={() => handleBuildingSelect(building)}
                     className="w-full flex items-center p-4 transition-colors duration-150 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover-purple-transparent"
                   >

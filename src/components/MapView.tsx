@@ -4,6 +4,7 @@ import mapboxgl from 'mapbox-gl';
 import { CAMPUS_CONFIG } from '../config/campus';
 import { NWU_BUILDINGS } from '../data/campusBuildings';
 import { Location } from '../types';
+import axios from 'axios';
 
 interface MapViewProps {
   onLocationSelect: (location: Location) => void;
@@ -25,12 +26,23 @@ const campusLocations: Location[] = NWU_BUILDINGS.map(building => ({
 }));
 
 export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapViewProps) {
+  const [locations,setLocations] = useState([])
   const [zoom] = useState(CAMPUS_CONFIG.defaultZoom);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const onLocationSelectRef = useRef(onLocationSelect);
 
+  useEffect(() => {
+      try{
+          axios.get(`http://${import.meta.env.VITE_API_GATEWAY_URL}/api/buildings`).then((res) =>{
+          setLocations(res.data)
+        })
+      } catch(err) {
+        console.error(err)
+      }
+  },[])
+  
   // Update the ref when onLocationSelect changes
   useEffect(() => {
     onLocationSelectRef.current = onLocationSelect;
@@ -198,7 +210,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
 
-      campusLocations.forEach((location) => {
+      locations.forEach((location) => {
         // Create a DOM element for the marker
         const markerElement = document.createElement('div');
         markerElement.className = 'custom-marker';
@@ -258,7 +270,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
         mapInstanceRef.current = null;
       }
     };
-  }, [isDarkMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isDarkMode,locations]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Update map style when dark mode changes
   useEffect(() => {

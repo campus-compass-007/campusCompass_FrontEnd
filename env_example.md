@@ -13,3 +13,6 @@ VITE_APP_URL="https://your-domain.com"
 
 # Mapbox Token (add your actual token)
 VITE_MAPBOX_TOKEN=your_mapbox_token_here
+
+# API Base URL
+VITE_API_GATEWAY_URL="https://api.your-domain.com"
