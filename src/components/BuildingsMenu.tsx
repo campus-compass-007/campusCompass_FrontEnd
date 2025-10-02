@@ -35,7 +35,7 @@ const mockOffices: Office[] = [
 export function BuildingsMenu({ isOpen, onClose, searchQuery = '' }: BuildingsMenuProps) {
   const [buildings,setBuildings] = useState([])
   useEffect(()=>{
-    axios.get("http://localhost:4000/api/buildings").then((res) => {
+    axios.get(`http://${import.meta.env.VITE_API_GATEWAY_URL}/api/buildings`).then((res) => {
       setBuildings(res.data)
     })
   }, [])

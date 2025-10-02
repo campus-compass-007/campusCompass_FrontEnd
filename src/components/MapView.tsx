@@ -27,8 +27,6 @@ const campusLocations: Location[] = NWU_BUILDINGS.map(building => ({
 
 export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapViewProps) {
   const [locations,setLocations] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [zoom] = useState(CAMPUS_CONFIG.defaultZoom);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
@@ -36,20 +34,13 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
   const onLocationSelectRef = useRef(onLocationSelect);
 
   useEffect(() => {
-    const getBuildings = async () => {
       try{
-        const res = await axios.get("http://localhost:4000/api/locations").then((res) =>{
-          console.log(res.data)
+          axios.get(`http://${import.meta.env.VITE_API_GATEWAY_URL}/api/buildings`).then((res) =>{
           setLocations(res.data)
         })
       } catch(err) {
-        setError('Failed loading Buildings')
         console.error(err)
-      } finally {
-        setLoading(false)
       }
-    }
-    getBuildings()
   },[])
   
   // Update the ref when onLocationSelect changes
@@ -279,7 +270,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
         mapInstanceRef.current = null;
       }
     };
-  }, [isDarkMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isDarkMode,locations]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Update map style when dark mode changes
   useEffect(() => {
