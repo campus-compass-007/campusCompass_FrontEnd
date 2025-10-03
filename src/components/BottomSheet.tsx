@@ -5,6 +5,7 @@ interface BottomSheetProps {
   location: Location | null;
   onClose: () => void;
   isDarkMode?: boolean;
+  onNavigate?: (location: Location) => void;
 }
 
 const getLocationDetails = (location: Location) => {
@@ -77,10 +78,16 @@ const getLocationDetails = (location: Location) => {
   return details[location.type] || details.restaurant;
 };
 
-export function BottomSheet({ location, onClose, isDarkMode }: BottomSheetProps) {
+export function BottomSheet({ location, onClose, isDarkMode, onNavigate }: BottomSheetProps) {
   if (!location) return null;
 
   const details = getLocationDetails(location);
+
+  const handleNavigateClick = () => {
+    if (onNavigate) {
+      onNavigate(location);
+    }
+  };
 
   return (
     <div className={`fixed inset-x-0 bottom-0 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-t-xl shadow-2xl z-50 max-h-96 overflow-y-auto border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
@@ -135,9 +142,11 @@ export function BottomSheet({ location, onClose, isDarkMode }: BottomSheetProps)
 
         {/* Action Buttons */}
         <div className="flex gap-3">
-          <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors">
+          <button 
+            onClick={handleNavigateClick}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors">
             <Navigation className="w-5 h-5" />
-            Directions
+            Go
           </button>
           <button className={`p-3 border ${isDarkMode ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'} rounded-lg transition-colors`}>
             <Phone className={`w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} />
