@@ -351,6 +351,50 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
 
     userLocationMarkerRef.current = userMarker;
 
+    // Add hardcoded dummy building pin for testing
+    const dummyBuildingLocation: Location = {
+      id: 'test-building-dummy',
+      name: 'Test Building (Routing Demo)',
+      address: 'Test Location for Routing',
+      lat: -26.6875002,
+      lng: 27.0930933,
+      type: 'landmark'
+    };
+
+    // Create building marker element
+    const buildingMarkerElement = document.createElement('div');
+    buildingMarkerElement.className = 'custom-marker';
+    buildingMarkerElement.style.cssText = `
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid white;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #22c55e;
+    `;
+
+    const buildingIcon = document.createElement('div');
+    buildingIcon.innerHTML = '🏛️';
+    buildingIcon.style.fontSize = '16px';
+    buildingMarkerElement.appendChild(buildingIcon);
+
+    // Create the building marker
+    const buildingMarker = new mapboxgl.Marker(buildingMarkerElement)
+      .setLngLat([dummyBuildingLocation.lng, dummyBuildingLocation.lat])
+      .addTo(mapInstanceRef.current);
+
+    // Add click event to the building marker
+    buildingMarkerElement.addEventListener('click', () => {
+      handleLocationClick(dummyBuildingLocation);
+    });
+
+    // Store in markers ref so it gets cleaned up
+    markersRef.current.push(buildingMarker);
+
     return () => {
       if (userLocationMarkerRef.current) {
         userLocationMarkerRef.current.remove();
