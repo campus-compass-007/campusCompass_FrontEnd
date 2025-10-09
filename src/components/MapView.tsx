@@ -45,7 +45,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
       } catch(err) {
         console.error(err)
       }
-  },[])
+  },[isDarkMode])
   
   // Update the ref when onLocationSelect changes
   useEffect(() => {
@@ -273,7 +273,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
 
       markersRef.current.push(marker);
     });
-  }, [locations]); // Re-run when locations change
+  }, [handleLocationClick, locations]); // Re-run when locations change
 
   // Update map style when dark mode changes
   useEffect(() => {
@@ -400,7 +400,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
         userLocationMarkerRef.current.remove();
       }
     };
-  }, []);
+  }, [handleLocationClick]);
 
   // Handle route calculation when requested
   useEffect(() => {
@@ -414,149 +414,36 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
         console.log('🗺️ Calculating route from:', MOCK_USER_LOCATION, 'to:', destination);
         
         // Get route from mock user location to selected destination
-        const route = await getWalkingRoute(MOCK_USER_LOCATION, destination, accessToken);
-        
-        console.log('✅ Route calculated:', route);
-        console.log('📍 Route coordinates:', route.geometry.coordinates);
-        console.log('� Route geometry type:', route.geometry.type);
-        console.log('🔍 Route geometry object:', JSON.stringify(route.geometry));
-        console.log('�📏 Route distance:', route.distance, 'meters');
-        console.log('⏱️ Route duration:', route.duration, 'seconds');
-        console.log('🗺️ First coordinate:', route.geometry.coordinates[0]);
-        console.log('🗺️ Last coordinate:', route.geometry.coordinates[route.geometry.coordinates.length - 1]);
-        
-        // Check if coordinates are within campus bounds
-        const bounds = CAMPUS_CONFIG.bounds;
-        const isStartInBounds = 
-          route.geometry.coordinates[0][0] >= bounds[0] && 
-          route.geometry.coordinates[0][0] <= bounds[2] &&
-          route.geometry.coordinates[0][1] >= bounds[1] && 
-          route.geometry.coordinates[0][1] <= bounds[3];
-        const isEndInBounds = 
-          route.geometry.coordinates[route.geometry.coordinates.length - 1][0] >= bounds[0] && 
-          route.geometry.coordinates[route.geometry.coordinates.length - 1][0] <= bounds[2] &&
-          route.geometry.coordinates[route.geometry.coordinates.length - 1][1] >= bounds[1] && 
-          route.geometry.coordinates[route.geometry.coordinates.length - 1][1] <= bounds[3];
-        
-        console.log('✅ Start point in campus bounds:', isStartInBounds);
-        console.log('✅ End point in campus bounds:', isEndInBounds);
-        console.log('📦 Campus bounds:', bounds);
-        
-        // Ensure map is loaded before drawing
-        const drawRoute = () => {
-          if (!mapInstanceRef.current) return;
-          
-          console.log('🎨 Drawing route on map...');
-          
-          // Draw route on map (ensure it's above all other layers including mask)
-          drawRouteOnMap(mapInstanceRef.current!, route);
-          
-          console.log('🔍 Checking if route layers exist...');
-          console.log('Route outline layer exists:', mapInstanceRef.current!.getLayer('route-line-outline') !== undefined);
-          console.log('Route main layer exists:', mapInstanceRef.current!.getLayer('route-line') !== undefined);
-          
-          // Get all layer IDs to find the topmost layer
-          const allLayers = mapInstanceRef.current!.getStyle().layers;
-          console.log('Total layers before moving route:', allLayers?.length);
-          
-          // Move route layers to the VERY TOP (no beforeId = top of stack)
-          // Note: In Mapbox, layers are drawn in order, so we need these last
-          if (mapInstanceRef.current!.getLayer('route-line-outline')) {
-            // Remove and re-add to ensure it's on top
-            const outlineLayer = mapInstanceRef.current!.getLayer('route-line-outline');
-            const mainLayer = mapInstanceRef.current!.getLayer('route-line');
-            
-            console.log('🔄 Re-adding layers to ensure they are on top...');
-            
-            // Remove existing layers
-            if (mainLayer) mapInstanceRef.current!.removeLayer('route-line');
-            if (outlineLayer) mapInstanceRef.current!.removeLayer('route-line-outline');
-            
-            // Re-add them (they will be added to the top)
-            mapInstanceRef.current!.addLayer({
-              id: 'route-line-outline',
-              type: 'line',
-              source: 'route',
-              layout: {
-                'line-join': 'round',
-                'line-cap': 'round'
-              },
-              paint: {
-                'line-color': '#1e3a8a',
-                'line-width': 10,
-                'line-opacity': 0.5
-              }
-            });
-            
-            mapInstanceRef.current!.addLayer({
-              id: 'route-line',
-              type: 'line',
-              source: 'route',
-              layout: {
-                'line-join': 'round',
-                'line-cap': 'round'
-              },
-              paint: {
-                'line-color': '#3b82f6', // Bright blue
-                'line-width': 6,
-                'line-opacity': 0.95
-              }
-            });
-            
-            console.log('✅ Route layers re-added to top of layer stack');
-            
-            // Set layer visibility explicitly
-            mapInstanceRef.current!.setLayoutProperty('route-line', 'visibility', 'visible');
-            mapInstanceRef.current!.setLayoutProperty('route-line-outline', 'visibility', 'visible');
-          }
-          
-          // Log all layers to debug
-          const layers = mapInstanceRef.current!.getStyle().layers;
-          console.log('📋 All map layers:', layers?.map(l => l.id));
-          const lastLayers = layers?.slice(-10).map(l => l.id) || [];
-          console.log('🔝 Last 10 layers (top of stack):', lastLayers);
-          
-          // Double-check the route layer paint properties
-          const routeLayer = mapInstanceRef.current!.getLayer('route-line');
-          if (routeLayer) {
-            console.log('🎨 Route layer config:', routeLayer);
-            const routeSource = mapInstanceRef.current!.getSource('route');
-            console.log('📍 Route source data:', routeSource);
-          }
-          
-          // CRITICAL: Check if campus-mask-fill is covering the route
-          const maskLayerIndex = layers?.findIndex(l => l.id === 'campus-mask-fill');
-          const routeLayerIndex = layers?.findIndex(l => l.id === 'route-line');
-          console.log('🎭 Mask layer index:', maskLayerIndex);
-          console.log('🛣️ Route layer index:', routeLayerIndex);
-          console.log('⚠️ Route is', routeLayerIndex > maskLayerIndex ? 'ABOVE' : 'BELOW', 'mask layer');
-          
-          // Fit map bounds to show the entire route AFTER drawing
-          setTimeout(() => {
-            const coordinates = route.geometry.coordinates;
-            const bounds = coordinates.reduce((bounds, coord) => {
-              return bounds.extend(coord as [number, number]);
-            }, new mapboxgl.LngLatBounds(coordinates[0] as [number, number], coordinates[0] as [number, number]));
-
-            if (mapInstanceRef.current) {
-              mapInstanceRef.current.fitBounds(bounds, {
-                padding: { top: 100, bottom: 100, left: 50, right: 50 },
-                duration: 1000
-              });
-            }
-          }, 100);
-        };
-        
-        // Check if map is loaded
-        if (mapInstanceRef.current!.loaded()) {
-          drawRoute();
-        } else {
-          mapInstanceRef.current!.on('load', drawRoute);
+        //const route = await getWalkingRoute(MOCK_USER_LOCATION, destination, accessToken);
+        const url = await axios.get(`https://api.mapbox.com/directions/v5/mapbox/walking/${MOCK_USER_LOCATION[0]},${MOCK_USER_LOCATION[1]};${destination[0]},${destination[1]}?alternatives=false&geometries=geojson&language=en&overview=full&steps=true&access_token=${accessToken}`)
+        const data = url.data.routes[0];
+        const route = data.geometry;
+        const geojson = {
+          'type': 'Feature',
+          'properties': {},
+          'geometry': data.geometry
         }
-        
-        // Notify parent component that route was calculated
-        if (onRouteCalculated) {
-          onRouteCalculated(route, selectedLocation);
+
+        if (mapInstanceRef.current?.getSource('route')){
+          mapInstanceRef.current?.getSource('route').setData(geojson)
+        } else{
+          mapInstanceRef.current?.addLayer({
+            id: 'route',
+            type: 'line',
+            source: {
+              type: 'geojson',
+              data: geojson
+            },
+            layout: {
+              "line-join": 'round',
+              'line-cap': 'round'
+            },
+            paint: {
+              'line-color': '#3887be',
+              'line-width': 5,
+              'line-opacity': 0.75
+            }
+          })
         }
 
       } catch (error) {
@@ -569,7 +456,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
     };
 
     calculateRoute();
-  }, [shouldCalculateRoute, selectedLocation, onRouteCalculated, onRouteClear]);
+  }, [onRouteClear, selectedLocation, shouldCalculateRoute]);
 
   // Clear route when location selection is closed
   useEffect(() => {
