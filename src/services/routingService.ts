@@ -81,42 +81,32 @@ export function drawRouteOnMap(
   if (map.getLayer(layerId)) {
     map.removeLayer(layerId);
   }
-  if (map.getSource(sourceId)) {
-    map.removeSource(sourceId);
-  }
-
-  // Add route source
-  map.addSource(sourceId, {
-    type: 'geojson',
-    data: {
-      type: 'Feature',
-      properties: {},
-      geometry: route.geometry as any
-    }
-  });
-
-  // Add route layer
-  map.addLayer({
-    id: layerId,
-    type: 'line',
-    source: sourceId,
-    layout: {
-      'line-join': 'round',
-      'line-cap': 'round'
-    },
-    paint: {
-      'line-color': '#3b82f6', // Blue color for the route
-      'line-width': 6,
-      'line-opacity': 0.8
-    }
-  });
-
-  // Add a lighter outline for better visibility
+  
   const outlineLayerId = `${layerId}-outline`;
   if (map.getLayer(outlineLayerId)) {
     map.removeLayer(outlineLayerId);
   }
+  
+  if (map.getSource(sourceId)) {
+    map.removeSource(sourceId);
+  }
 
+  // Add route source with explicit LineString geometry
+  const geojsonData = {
+    type: 'Feature' as const,
+    properties: {},
+    geometry: {
+      type: 'LineString' as const,
+      coordinates: route.geometry.coordinates
+    }
+  };
+
+  map.addSource(sourceId, {
+    type: 'geojson',
+    data: geojsonData
+  });
+
+  // Add route outline layer first (wider, lighter)
   map.addLayer({
     id: outlineLayerId,
     type: 'line',
@@ -126,11 +116,27 @@ export function drawRouteOnMap(
       'line-cap': 'round'
     },
     paint: {
-      'line-color': '#1e40af', // Darker blue for outline
-      'line-width': 8,
-      'line-opacity': 0.4
+      'line-color': '#1e3a8a', // Dark blue for outline
+      'line-width': 10,
+      'line-opacity': 0.5
     }
-  }, layerId); // Add below the main route line
+  });
+
+  // Add main route layer on top (narrower, brighter)
+  map.addLayer({
+    id: layerId,
+    type: 'line',
+    source: sourceId,
+    layout: {
+      'line-join': 'round',
+      'line-cap': 'round'
+    },
+    paint: {
+      'line-color': '#3b82f6', // Bright blue color for the route
+      'line-width': 6,
+      'line-opacity': 0.95
+    }
+  });
 }
 
 /**

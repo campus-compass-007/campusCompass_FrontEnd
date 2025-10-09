@@ -90,7 +90,7 @@ export function BottomSheet({ location, onClose, isDarkMode, onNavigate }: Botto
   };
 
   return (
-    <div className={`fixed inset-x-0 bottom-0 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-t-xl shadow-2xl z-50 max-h-96 overflow-y-auto border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+    <div className={`fixed inset-x-0 bottom-0 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-t-xl shadow-2xl z-[100] max-h-96 overflow-y-auto border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
       {/* Handle */}
       <div className="flex justify-center py-3">
         <div className={`w-12 h-1 rounded-full ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
