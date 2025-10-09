@@ -4,7 +4,7 @@ import mapboxgl from 'mapbox-gl';
 import { CAMPUS_CONFIG } from '../config/campus';
 import { Location } from '../types';
 import axios from 'axios';
-import { getWalkingRoute, drawRouteOnMap, clearRouteFromMap, Route } from '../services/routingService';
+import { Route } from '../services/routingService';
 
 interface MapViewProps {
   onLocationSelect: (location: Location) => void;
@@ -13,13 +13,14 @@ interface MapViewProps {
   onRouteCalculated?: (route: Route, destination: Location) => void;
   shouldCalculateRoute?: boolean;
   onRouteClear?: () => void;
+  currentRoute?: Route | null;
 }
 
 // Mock user location for testing (NWU Main Gate area)
 // TODO: Replace with real GPS location later
 const MOCK_USER_LOCATION: [number, number] = [27.0947, -26.6879]; // [lng, lat]
 
-export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRouteCalculated, shouldCalculateRoute, onRouteClear }: MapViewProps) {
+export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRouteCalculated, shouldCalculateRoute, onRouteClear, currentRoute }: MapViewProps) {
   const [locations,setLocations] = useState<Location[]>([])
   const [zoom] = useState(CAMPUS_CONFIG.defaultZoom);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -215,7 +216,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
         mapInstanceRef.current = null;
       }
     };
-  }, [isDarkMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Add/update markers whenever locations change
   useEffect(() => {
@@ -277,18 +278,134 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
 
   // Update map style when dark mode changes
   useEffect(() => {
-    if (mapInstanceRef.current) {
-      const newStyle = isDarkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12';
-      
-      // Add a small delay to prevent flashing during transitions
-      const timeoutId = setTimeout(() => {
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.setStyle(newStyle);
+    if (!mapInstanceRef.current) return;
+    
+    const map = mapInstanceRef.current;
+    const newStyle = isDarkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12';
+    
+    // Save current state before style change
+    const currentCenter = map.getCenter();
+    const currentZoom = map.getZoom();
+    
+    // When style changes, we need to restore custom layers
+    const onStyleLoad = () => {
+      // Restore campus boundary
+      if (!map.getSource('campus-boundary')) {
+        map.addSource('campus-boundary', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'Polygon',
+              coordinates: [CAMPUS_CONFIG.boundary]
+            }
+          }
+        });
+
+        map.addLayer({
+          id: 'campus-boundary-line',
+          type: 'line',
+          source: 'campus-boundary',
+          layout: {},
+          paint: {
+            'line-color': '#6c3d91',
+            'line-width': 3,
+            'line-opacity': 0.8
+          }
+        });
+
+        map.addLayer({
+          id: 'campus-boundary-fill',
+          type: 'fill',
+          source: 'campus-boundary',
+          layout: {},
+          paint: {
+            'fill-color': '#6c3d91',
+            'fill-opacity': 0.1
+          }
+        });
+      }
+
+      // Restore campus mask
+      if (!map.getSource('campus-mask')) {
+        const maskBounds = [27.08, -26.71, 28.10, -26.67];
+        const invertedPolygon = [
+          [
+            [maskBounds[0], maskBounds[1]],
+            [maskBounds[2], maskBounds[1]],
+            [maskBounds[2], maskBounds[3]],
+            [maskBounds[0], maskBounds[3]],
+            [maskBounds[0], maskBounds[1]]
+          ],
+          CAMPUS_CONFIG.boundary
+        ];
+
+        map.addSource('campus-mask', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: {
+              type: 'Polygon',
+              coordinates: invertedPolygon
+            },
+            properties: {}
+          }
+        });
+
+        map.addLayer({
+          id: 'campus-mask-fill',
+          type: 'fill',
+          source: 'campus-mask',
+          layout: {},
+          paint: {
+            'fill-color': isDarkMode ? '#1f2937' : '#ffffff',
+            'fill-opacity': 1.0
+          }
+        });
+      } else {
+        // Update mask color for dark mode
+        map.setPaintProperty('campus-mask-fill', 'fill-color', isDarkMode ? '#1f2937' : '#ffffff');
+      }
+
+      // Restore route if it exists
+      const routeSource = map.getSource('route');
+      if (routeSource && 'serialize' in routeSource) {
+        // Route source exists, just need to re-add the layer
+        if (!map.getLayer('route')) {
+          map.addLayer({
+            id: 'route',
+            type: 'line',
+            source: 'route',
+            layout: {
+              "line-join": 'round',
+              'line-cap': 'round'
+            },
+            paint: {
+              'line-color': '#3887be',
+              'line-width': 5,
+              'line-opacity': 0.75
+            }
+          });
         }
-      }, 50);
-      
-      return () => clearTimeout(timeoutId);
-    }
+      }
+
+      // Restore camera position
+      map.jumpTo({
+        center: currentCenter,
+        zoom: currentZoom
+      });
+    };
+
+    // Listen for style load completion
+    map.once('style.load', onStyleLoad);
+    
+    // Change the style
+    map.setStyle(newStyle);
+    
+    return () => {
+      map.off('style.load', onStyleLoad);
+    };
   }, [isDarkMode]);
 
   // Update markers when selectedLocation changes
@@ -414,26 +531,29 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
         console.log('🗺️ Calculating route from:', MOCK_USER_LOCATION, 'to:', destination);
         
         // Get route from mock user location to selected destination
-        //const route = await getWalkingRoute(MOCK_USER_LOCATION, destination, accessToken);
         const url = await axios.get(`https://api.mapbox.com/directions/v5/mapbox/walking/${MOCK_USER_LOCATION[0]},${MOCK_USER_LOCATION[1]};${destination[0]},${destination[1]}?alternatives=false&geometries=geojson&language=en&overview=full&steps=true&access_token=${accessToken}`)
         const data = url.data.routes[0];
-        const route = data.geometry;
-        const geojson = {
-          'type': 'Feature',
-          'properties': {},
-          'geometry': data.geometry
-        }
+        
+        const geojson: GeoJSON.Feature<GeoJSON.LineString> = {
+          type: 'Feature',
+          properties: {},
+          geometry: data.geometry
+        };
 
-        if (mapInstanceRef.current?.getSource('route')){
-          mapInstanceRef.current?.getSource('route').setData(geojson)
-        } else{
-          mapInstanceRef.current?.addLayer({
+        // Update or add the route source/layer
+        const map = mapInstanceRef.current;
+        const routeSource = map?.getSource('route');
+        if (map && routeSource && 'setData' in routeSource) {
+          routeSource.setData(geojson);
+        } else if (map) {
+          map.addSource('route', {
+            type: 'geojson',
+            data: geojson
+          });
+          map.addLayer({
             id: 'route',
             type: 'line',
-            source: {
-              type: 'geojson',
-              data: geojson
-            },
+            source: 'route',
             layout: {
               "line-join": 'round',
               'line-cap': 'round'
@@ -443,7 +563,28 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
               'line-width': 5,
               'line-opacity': 0.75
             }
-          })
+          });
+        }
+
+        // Transform the Mapbox API response to Route interface
+        if (onRouteCalculated && selectedLocation) {
+          const route: Route = {
+            distance: data.distance,
+            duration: data.duration,
+            geometry: data.geometry,
+            steps: data.legs[0].steps.map((step: { maneuver: { instruction: string; type: string; modifier?: string }; distance: number; duration: number }) => ({
+              instruction: step.maneuver.instruction,
+              distance: step.distance,
+              duration: step.duration,
+              maneuver: {
+                type: step.maneuver.type,
+                modifier: step.maneuver.modifier
+              }
+            }))
+          };
+          
+          console.log('📦 Calling onRouteCalculated with transformed route:', route, 'destination:', selectedLocation);
+          onRouteCalculated(route, selectedLocation);
         }
 
       } catch (error) {
@@ -456,14 +597,21 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
     };
 
     calculateRoute();
-  }, [onRouteClear, selectedLocation, shouldCalculateRoute]);
+  }, [onRouteClear, selectedLocation, shouldCalculateRoute, onRouteCalculated]);
 
-  // Clear route when location selection is closed
+  // Clear route when route is explicitly cleared (not when just selectedLocation changes)
   useEffect(() => {
-    if (!selectedLocation && mapInstanceRef.current) {
-      clearRouteFromMap(mapInstanceRef.current);
+    if (mapInstanceRef.current && currentRoute === null && !shouldCalculateRoute) {
+      // Only clear when currentRoute is explicitly null and we're not calculating a route
+      const map = mapInstanceRef.current;
+      if (map.getLayer('route')) {
+        map.removeLayer('route');
+      }
+      if (map.getSource('route')) {
+        map.removeSource('route');
+      }
     }
-  }, [selectedLocation]);
+  }, [currentRoute, shouldCalculateRoute]);
 
   const handleMyLocationClick = () => {
     if (navigator.geolocation && mapInstanceRef.current) {

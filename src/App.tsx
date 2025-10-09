@@ -54,9 +54,11 @@ export default function App() {
   };
 
   const handleRouteCalculated = (route: Route, destination: Location) => {
+    console.log('📍 App: Route calculated callback triggered', route, destination);
     setCurrentRoute(route);
     setRouteDestination(destination);
     setShouldCalculateRoute(false);
+    console.log('📍 App: Current route state updated');
     // Close the bottom sheet when route is shown
     setSelectedLocation(null);
   };
@@ -126,6 +128,7 @@ export default function App() {
           onRouteCalculated={handleRouteCalculated}
           shouldCalculateRoute={shouldCalculateRoute}
           onRouteClear={handleCloseDirections}
+          currentRoute={currentRoute}
         />
       </div>
 
