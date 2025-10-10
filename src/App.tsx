@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MapView } from './components/MapView';
 import { BottomSheet } from './components/BottomSheet';
 import { BuildingsMenu } from './components/BuildingsMenu';
@@ -37,23 +37,23 @@ export default function App() {
     void htmlElement.offsetHeight;
   }, [isDarkMode]);
 
-  const handleLocationSelect = (location: Location) => {
+  const handleLocationSelect = useCallback((location: Location) => {
     setSelectedLocation(location);
-  };
+  }, []);
 
-  const handleCloseBottomSheet = () => {
+  const handleCloseBottomSheet = useCallback(() => {
     setSelectedLocation(null);
     setShouldCalculateRoute(false);
     setCurrentRoute(null);
     setRouteDestination(null);
-  };
+  }, []);
 
-  const handleNavigate = (location: Location) => {
+  const handleNavigate = useCallback((location: Location) => {
     setShouldCalculateRoute(true);
     setRouteDestination(location);
-  };
+  }, []);
 
-  const handleRouteCalculated = (route: Route, destination: Location) => {
+  const handleRouteCalculated = useCallback((route: Route, destination: Location) => {
     console.log('📍 App: Route calculated callback triggered', route, destination);
     setCurrentRoute(route);
     setRouteDestination(destination);
@@ -61,13 +61,13 @@ export default function App() {
     console.log('📍 App: Current route state updated');
     // Close the bottom sheet when route is shown
     setSelectedLocation(null);
-  };
+  }, []);
 
-  const handleCloseDirections = () => {
+  const handleCloseDirections = useCallback(() => {
     setCurrentRoute(null);
     setRouteDestination(null);
     setShouldCalculateRoute(false);
-  };
+  }, []);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);

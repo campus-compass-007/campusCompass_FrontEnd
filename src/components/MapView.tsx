@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { Navigation } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import { CAMPUS_CONFIG } from '../config/campus';
@@ -20,7 +20,7 @@ interface MapViewProps {
 // TODO: Replace with real GPS location later
 const MOCK_USER_LOCATION: [number, number] = [27.0947, -26.6879]; // [lng, lat]
 
-export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRouteCalculated, shouldCalculateRoute, onRouteClear, currentRoute }: MapViewProps) {
+const MapViewComponent = ({ onLocationSelect, selectedLocation, isDarkMode, onRouteCalculated, shouldCalculateRoute, onRouteClear, currentRoute }: MapViewProps) => {
   const [locations,setLocations] = useState<Location[]>([])
   const [zoom] = useState(CAMPUS_CONFIG.defaultZoom);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -46,7 +46,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
       } catch(err) {
         console.error(err)
       }
-  },[isDarkMode])
+  },[])
   
   // Update the ref when onLocationSelect changes
   useEffect(() => {
@@ -70,24 +70,6 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
       default: return '#6c3d91';           // Purple (campus theme) for others
     }
   };
-
-  const handleLocationClick = useCallback((location: Location) => {
-    onLocationSelectRef.current(location);
-    
-    // Center map on selected location but respect campus bounds WITHOUT zooming
-    if (mapInstanceRef.current) {
-      const [west, south, east, north] = CAMPUS_CONFIG.bounds;
-      const targetLng = Math.max(west, Math.min(east, location.lng));
-      const targetLat = Math.max(south, Math.min(north, location.lat));
-      
-      // Only pan to center, maintain current zoom level
-      mapInstanceRef.current.flyTo({
-        center: [targetLng, targetLat],
-        // Remove zoom parameter to maintain current zoom level
-        duration: 1000
-      });
-    }
-  }, []); // No dependencies needed since we use ref
 
   // Initialize map
   useEffect(() => {
@@ -267,14 +249,34 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
         .setLngLat([location.lng, location.lat])
         .addTo(mapInstanceRef.current!);
 
-      // Add click event
+      // Add click event using ref to get current handler
       markerElement.addEventListener('click', () => {
-        handleLocationClick(location);
+        onLocationSelectRef.current(location);
+        
+        // Center map on selected location but respect campus bounds
+        if (mapInstanceRef.current) {
+          const map = mapInstanceRef.current;
+          const currentZoom = map.getZoom();
+          const [west, south, east, north] = CAMPUS_CONFIG.bounds;
+          const targetLng = Math.max(west, Math.min(east, location.lng));
+          const targetLat = Math.max(south, Math.min(north, location.lat));
+          
+          // Smart zoom behavior:
+          // - If at minimum zoom (17), zoom in to 18.5 for smoother transition
+          // - Otherwise, maintain current zoom level
+          const targetZoom = currentZoom <= 17.1 ? 18.5 : currentZoom;
+          
+          map.flyTo({
+            center: [targetLng, targetLat],
+            zoom: targetZoom,
+            duration: 1000
+          });
+        }
       });
 
       markersRef.current.push(marker);
     });
-  }, [handleLocationClick, locations]); // Re-run when locations change
+  }, [locations]); // Only re-run when locations array changes, not on every render
 
   // Update map style when dark mode changes
   useEffect(() => {
@@ -408,17 +410,9 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
     };
   }, [isDarkMode]);
 
-  // Update markers when selectedLocation changes
-  useEffect(() => {
-    if (mapInstanceRef.current && selectedLocation) {
-      // Center map on selected location WITHOUT zooming
-      mapInstanceRef.current.flyTo({
-        center: [selectedLocation.lng, selectedLocation.lat],
-        // Remove zoom parameter to maintain current zoom level
-        duration: 1000
-      });
-    }
-  }, [selectedLocation]);
+  // Note: Removed selectedLocation useEffect that was causing double flyTo calls
+  // The flyTo animation is now handled directly in marker click handlers
+  // This prevents duplicate transitions and map re-renders
 
   // Removed zoom update useEffect to prevent map reinitialization conflicts
 
@@ -504,9 +498,29 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
       .setLngLat([dummyBuildingLocation.lng, dummyBuildingLocation.lat])
       .addTo(mapInstanceRef.current);
 
-    // Add click event to the building marker
+    // Add click event to the building marker using ref
     buildingMarkerElement.addEventListener('click', () => {
-      handleLocationClick(dummyBuildingLocation);
+      onLocationSelectRef.current(dummyBuildingLocation);
+      
+      // Center map on selected location but respect campus bounds
+      if (mapInstanceRef.current) {
+        const map = mapInstanceRef.current;
+        const currentZoom = map.getZoom();
+        const [west, south, east, north] = CAMPUS_CONFIG.bounds;
+        const targetLng = Math.max(west, Math.min(east, dummyBuildingLocation.lng));
+        const targetLat = Math.max(south, Math.min(north, dummyBuildingLocation.lat));
+        
+        // Smart zoom behavior:
+        // - If at minimum zoom (17), zoom in to 18.5 for smoother transition
+        // - Otherwise, maintain current zoom level
+        const targetZoom = currentZoom <= 17.1 ? 18.5 : currentZoom;
+        
+        map.flyTo({
+          center: [targetLng, targetLat],
+          zoom: targetZoom,
+          duration: 1000
+        });
+      }
     });
 
     // Store in markers ref so it gets cleaned up
@@ -517,7 +531,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
         userLocationMarkerRef.current.remove();
       }
     };
-  }, [handleLocationClick]);
+  }, []); // No dependencies - only run once when map is initialized
 
   // Handle route calculation when requested
   useEffect(() => {
@@ -670,4 +684,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode, onRout
       </div>
     </div>
   );
-}
+};
+
+// Wrap with memo to prevent unnecessary re-renders
+export const MapView = memo(MapViewComponent);
