@@ -145,6 +145,7 @@ export default function App() {
         isOpen={showBuildingsMenu}
         onClose={handleCloseBuildingsMenu}
         searchQuery={searchQuery}
+        onLocationSelect={handleLocationSelect}
       />
 
       {/* Contacts Menu */}
