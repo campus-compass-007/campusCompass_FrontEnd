@@ -87,10 +87,19 @@ const MapViewComponent = ({ onLocationSelect, selectedLocation, isDarkMode, onRo
       // Increased minZoom to ensure polygon always fills viewport and no outside areas visible
       minZoom: 17,
       maxZoom: 20,
+      // Disable 3D rotation and tilting
+      pitch: 0,           // Set initial pitch to 0 (flat view)
+      bearing: 0,         // Set initial bearing to 0 (north up)
+      pitchWithRotate: false,  // Disable pitch rotation with right-click drag
+      dragRotate: false,       // Disable map rotation with right-click or Ctrl+drag
+      touchPitch: false,       // Disable pitch on touch devices
     });
 
-    // Add navigation control
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // Add navigation control (zoom only, no rotation compass)
+    map.addControl(new mapboxgl.NavigationControl({
+      showCompass: false,  // Hide compass since rotation is disabled
+      showZoom: true       // Keep zoom controls
+    }), 'top-right');
 
     // Add attribution control
     map.addControl(new mapboxgl.AttributionControl({

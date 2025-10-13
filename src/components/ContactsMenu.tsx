@@ -15,18 +15,14 @@ interface ContactsMenuProps {
 }
 
 const mockContacts: Contact[] = [
-  { id: '0', name: 'Protection Services', title: 'Emergency Services', phone: '(555) 911-HELP', isEmergency: true },
-  { id: '1', name: 'Dr. Sarah Johnson', title: 'Dean of Academic Affairs', phone: '(555) 123-4567' },
-  { id: '2', name: 'Michael Chen', title: 'Student Services Director', phone: '(555) 234-5678' },
-  { id: '3', name: 'Prof. Emily Davis', title: 'Computer Science Department', phone: '(555) 345-6789' },
-  { id: '4', name: 'Robert Wilson', title: 'Facilities Management', phone: '(555) 456-7890' },
-  { id: '5', name: 'Dr. Amanda Rodriguez', title: 'Health Center', phone: '(555) 567-8901' },
-  { id: '6', name: 'James Thompson', title: 'IT Support', phone: '(555) 678-9012' },
-  { id: '7', name: 'Lisa Anderson', title: 'Admissions Office', phone: '(555) 789-0123' },
-  { id: '8', name: 'David Brown', title: 'Financial Aid', phone: '(555) 890-1234' },
-  { id: '9', name: 'Maria Garcia', title: 'International Student Services', phone: '(555) 901-2345' },
-  { id: '10', name: 'John Taylor', title: 'Library Services', phone: '(555) 012-3456' },
-  { id: '11', name: 'Jennifer White', title: 'Career Counseling', phone: '(555) 123-4567' },
+  { id: '0', name: 'Protection Services', title: 'Emergency Services', phone: '018 299 2215', isEmergency: true },
+  { id: '1', name: 'Registration', title: 'Registration office', phone: '086 016 9698' },
+  { id: '2', name: 'Health Care', title: 'Student Health Care Centre', phone: '018 299 4345' },
+  { id: '3', name: 'IT Support', title: 'IT Service Desk', phone: '018 285 4350' },
+  { id: '4', name: 'Distance Learning', title: 'Distance Learning Call Centre', phone: '018 285 5900' },
+  { id: '5', name: 'Teaching and Learning Call Centre', title: 'Centre for Teaching and Learning Call Centre', phone: '018 285 5930 ' },
+  { id: '6', name: 'Student Counselling', title: 'Psychological Services', phone: '018 299 2893' },
+  { id: '7', name: 'Ferdinand Postma Library', title: 'Library Help Desk', phone: '018 299 2802' },
 ];
 
 export function ContactsMenu({ isOpen, onClose }: ContactsMenuProps) {
@@ -38,13 +34,9 @@ export function ContactsMenu({ isOpen, onClose }: ContactsMenuProps) {
     contact.phone.includes(searchQuery)
   );
 
-  const handleContactCall = (contact: Contact) => {
-    console.log('Calling:', contact);
-    // Here you would initiate a phone call or copy number to clipboard
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(contact.phone);
-    }
-    // Don't close the menu immediately for contacts, let user choose multiple numbers
+  // Helper function to format phone number for tel: link (remove spaces and non-numeric chars except +)
+  const formatPhoneForTel = (phone: string) => {
+    return phone.replace(/\s/g, '');
   };
 
   const emergencyContact = filteredContacts.find(contact => contact.isEmergency);
@@ -95,9 +87,9 @@ export function ContactsMenu({ isOpen, onClose }: ContactsMenuProps) {
             {/* Emergency Contact - Highlighted */}
             {emergencyContact && (
               <div className="bg-red-50 dark:bg-red-900/20 border-b-2 border-red-200 dark:border-red-800">
-                <button
-                  onClick={() => handleContactCall(emergencyContact)}
-                  className="w-full flex items-center p-4 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-150 hover-red-emergency"
+                <a
+                  href={`tel:${formatPhoneForTel(emergencyContact.phone)}`}
+                  className="w-full flex items-center p-4 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-150 hover-red-emergency no-underline"
                 >
                   {/* Emergency Icon */}
                   <div className="w-12 h-12 mr-4 flex-shrink-0 bg-red-500 rounded-full flex items-center justify-center">
@@ -119,16 +111,16 @@ export function ContactsMenu({ isOpen, onClose }: ContactsMenuProps) {
 
                   {/* Phone Icon */}
                   <Phone className="w-6 h-6 text-red-500 ml-2" />
-                </button>
+                </a>
               </div>
             )}
 
             {/* Regular Contacts */}
             {regularContacts.map((contact) => (
-              <button
+              <a
                 key={contact.id}
-                onClick={() => handleContactCall(contact)}
-                className="w-full flex items-center p-4 transition-colors duration-150 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover-purple-transparent"
+                href={`tel:${formatPhoneForTel(contact.phone)}`}
+                className="w-full flex items-center p-4 transition-colors duration-150 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover-purple-transparent no-underline"
               >
                 {/* Contact Icon */}
                 <div className="w-12 h-12 mr-4 flex-shrink-0 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
@@ -150,7 +142,7 @@ export function ContactsMenu({ isOpen, onClose }: ContactsMenuProps) {
 
                 {/* Arrow Icon */}
                 <ChevronRight className="w-5 h-5 text-gray-400 ml-2" />
-              </button>
+              </a>
             ))}
             
             {filteredContacts.length === 0 && (
