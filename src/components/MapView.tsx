@@ -1,42 +1,47 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { Navigation } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import { CAMPUS_CONFIG } from '../config/campus';
-import { NWU_BUILDINGS } from '../data/campusBuildings';
 import { Location } from '../types';
 import axios from 'axios';
+import { Route } from '../services/routingService';
 
 interface MapViewProps {
   onLocationSelect: (location: Location) => void;
   selectedLocation: Location | null;
   isDarkMode?: boolean;
+  onRouteCalculated?: (route: Route, destination: Location) => void;
+  shouldCalculateRoute?: boolean;
+  onRouteClear?: () => void;
+  currentRoute?: Route | null;
 }
 
-// Convert campus buildings to Location format for map markers
-const campusLocations: Location[] = NWU_BUILDINGS.map(building => ({
-  id: building.id,
-  name: building.name,
-  address: building.address,
-  lat: building.lat,
-  lng: building.lng,
-  type: building.type === 'academic' ? 'landmark' : 
-        building.type === 'dining' ? 'restaurant' :
-        building.type === 'library' ? 'store' :
-        'landmark'
-}));
+// Mock user location for testing (NWU Main Gate area)
+// TODO: Replace with real GPS location later
+const MOCK_USER_LOCATION: [number, number] = [27.0947, -26.6879]; // [lng, lat]
 
-export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapViewProps) {
-  const [locations,setLocations] = useState([])
+const MapViewComponent = ({ onLocationSelect, selectedLocation, isDarkMode, onRouteCalculated, shouldCalculateRoute, onRouteClear, currentRoute }: MapViewProps) => {
+  const [locations,setLocations] = useState<Location[]>([])
   const [zoom] = useState(CAMPUS_CONFIG.defaultZoom);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const onLocationSelectRef = useRef(onLocationSelect);
+  const userLocationMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
   useEffect(() => {
       try{
           axios.get(`http://${import.meta.env.VITE_API_GATEWAY_URL}/api/buildings`).then((res) =>{
-          setLocations(res.data)
+          // Add dummy test building for routing
+          const testBuilding: Location = {
+            id: 'test-building-1',
+            name: 'Test Building (Routing Demo)',
+            address: 'Test Location for Routing',
+            lat: -26.6875002,
+            lng: 27.0930933,
+            type: 'landmark'
+          };
+          setLocations([testBuilding, ...res.data])
         })
       } catch(err) {
         console.error(err)
@@ -66,24 +71,6 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
     }
   };
 
-  const handleLocationClick = useCallback((location: Location) => {
-    onLocationSelectRef.current(location);
-    
-    // Center map on selected location but respect campus bounds WITHOUT zooming
-    if (mapInstanceRef.current) {
-      const [west, south, east, north] = CAMPUS_CONFIG.bounds;
-      const targetLng = Math.max(west, Math.min(east, location.lng));
-      const targetLat = Math.max(south, Math.min(north, location.lat));
-      
-      // Only pan to center, maintain current zoom level
-      mapInstanceRef.current.flyTo({
-        center: [targetLng, targetLat],
-        // Remove zoom parameter to maintain current zoom level
-        duration: 1000
-      });
-    }
-  }, []); // No dependencies needed since we use ref
-
   // Initialize map
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -100,10 +87,19 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
       // Increased minZoom to ensure polygon always fills viewport and no outside areas visible
       minZoom: 17,
       maxZoom: 20,
+      // Disable 3D rotation and tilting
+      pitch: 0,           // Set initial pitch to 0 (flat view)
+      bearing: 0,         // Set initial bearing to 0 (north up)
+      pitchWithRotate: false,  // Disable pitch rotation with right-click drag
+      dragRotate: false,       // Disable map rotation with right-click or Ctrl+drag
+      touchPitch: false,       // Disable pitch on touch devices
     });
 
-    // Add navigation control
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // Add navigation control (zoom only, no rotation compass)
+    map.addControl(new mapboxgl.NavigationControl({
+      showCompass: false,  // Hide compass since rotation is disabled
+      showZoom: true       // Keep zoom controls
+    }), 'top-right');
 
     // Add attribution control
     map.addControl(new mapboxgl.AttributionControl({
@@ -204,65 +200,6 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
 
     mapInstanceRef.current = map;
 
-    // Add markers for locations - defined inside useEffect to avoid dependency issues
-    const addMarkersToMapLocal = (mapInstance: mapboxgl.Map) => {
-      // Clear existing markers
-      markersRef.current.forEach(marker => marker.remove());
-      markersRef.current = [];
-
-      locations.forEach((location) => {
-        // Create a DOM element for the marker
-        const markerElement = document.createElement('div');
-        markerElement.className = 'custom-marker';
-        markerElement.style.cssText = `
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          border: 2px solid white;
-          cursor: pointer;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background-color: ${getMarkerBackgroundColor(location.type)};
-        `;
-
-        // Add custom emoji icon based on location type
-        const icon = document.createElement('div');
-        let emoji = '📍';
-        switch (location.type) {
-          case 'restaurant': emoji = '🍽'; break;
-          case 'library': emoji = '📚'; break;
-          case 'store': emoji = '🛒'; break;
-          case 'landmark': emoji = '🏛️'; break;
-          case 'gas_station': emoji = '⛽'; break;
-          case 'recreational': emoji = '💬'; break;
-          case 'residential': emoji = '🏠'; break;
-          case 'health': emoji = '👨‍⚕️'; break;
-          case 'security': emoji = '🛡️'; break;
-          default: emoji = '📍';
-        }
-        icon.innerHTML = emoji;
-        icon.style.fontSize = '16px';
-        markerElement.appendChild(icon);
-
-        // Create the marker
-        const marker = new mapboxgl.Marker(markerElement)
-          .setLngLat([location.lng, location.lat])
-          .addTo(mapInstance);
-
-        // Add click event
-        markerElement.addEventListener('click', () => {
-          handleLocationClick(location);
-        });
-
-        markersRef.current.push(marker);
-      });
-    };
-
-    // Add markers for locations
-    addMarkersToMapLocal(map);
-
     // Clean up on unmount
     return () => {
       if (mapInstanceRef.current) {
@@ -270,37 +207,434 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
         mapInstanceRef.current = null;
       }
     };
-  }, [isDarkMode,locations]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Add/update markers whenever locations change
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    locations.forEach((location) => {
+      // Create a DOM element for the marker
+      const markerElement = document.createElement('div');
+      markerElement.className = 'custom-marker';
+      markerElement.style.cssText = `
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid white;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: ${getMarkerBackgroundColor(location.type)};
+      `;
+
+      // Add custom emoji icon based on location type
+      const icon = document.createElement('div');
+      let emoji = '📍';
+      switch (location.type) {
+        case 'restaurant': emoji = '🍽'; break;
+        case 'library': emoji = '📚'; break;
+        case 'store': emoji = '🛒'; break;
+        case 'landmark': emoji = '🏛️'; break;
+        case 'gas_station': emoji = '⛽'; break;
+        case 'recreational': emoji = '💬'; break;
+        case 'residential': emoji = '🏠'; break;
+        case 'health': emoji = '👨‍⚕️'; break;
+        case 'security': emoji = '🛡️'; break;
+        default: emoji = '📍';
+      }
+      icon.innerHTML = emoji;
+      icon.style.fontSize = '16px';
+      markerElement.appendChild(icon);
+
+      // Create the marker
+      const marker = new mapboxgl.Marker(markerElement)
+        .setLngLat([location.lng, location.lat])
+        .addTo(mapInstanceRef.current!);
+
+      // Add click event using ref to get current handler
+      markerElement.addEventListener('click', () => {
+        onLocationSelectRef.current(location);
+        
+        // Center map on selected location but respect campus bounds
+        if (mapInstanceRef.current) {
+          const map = mapInstanceRef.current;
+          const currentZoom = map.getZoom();
+          const [west, south, east, north] = CAMPUS_CONFIG.bounds;
+          const targetLng = Math.max(west, Math.min(east, location.lng));
+          const targetLat = Math.max(south, Math.min(north, location.lat));
+          
+          // Smart zoom behavior:
+          // - If at minimum zoom (17), zoom in to 18.5 for smoother transition
+          // - Otherwise, maintain current zoom level
+          const targetZoom = currentZoom <= 17.1 ? 18.5 : currentZoom;
+          
+          map.flyTo({
+            center: [targetLng, targetLat],
+            zoom: targetZoom,
+            duration: 1000
+          });
+        }
+      });
+
+      markersRef.current.push(marker);
+    });
+  }, [locations]); // Only re-run when locations array changes, not on every render
 
   // Update map style when dark mode changes
   useEffect(() => {
-    if (mapInstanceRef.current) {
-      const newStyle = isDarkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12';
-      
-      // Add a small delay to prevent flashing during transitions
-      const timeoutId = setTimeout(() => {
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.setStyle(newStyle);
+    if (!mapInstanceRef.current) return;
+    
+    const map = mapInstanceRef.current;
+    const newStyle = isDarkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12';
+    
+    // Save current state before style change
+    const currentCenter = map.getCenter();
+    const currentZoom = map.getZoom();
+    
+    // When style changes, we need to restore custom layers
+    const onStyleLoad = () => {
+      // Restore campus boundary
+      if (!map.getSource('campus-boundary')) {
+        map.addSource('campus-boundary', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'Polygon',
+              coordinates: [CAMPUS_CONFIG.boundary]
+            }
+          }
+        });
+
+        map.addLayer({
+          id: 'campus-boundary-line',
+          type: 'line',
+          source: 'campus-boundary',
+          layout: {},
+          paint: {
+            'line-color': '#6c3d91',
+            'line-width': 3,
+            'line-opacity': 0.8
+          }
+        });
+
+        map.addLayer({
+          id: 'campus-boundary-fill',
+          type: 'fill',
+          source: 'campus-boundary',
+          layout: {},
+          paint: {
+            'fill-color': '#6c3d91',
+            'fill-opacity': 0.1
+          }
+        });
+      }
+
+      // Restore campus mask
+      if (!map.getSource('campus-mask')) {
+        const maskBounds = [27.08, -26.71, 28.10, -26.67];
+        const invertedPolygon = [
+          [
+            [maskBounds[0], maskBounds[1]],
+            [maskBounds[2], maskBounds[1]],
+            [maskBounds[2], maskBounds[3]],
+            [maskBounds[0], maskBounds[3]],
+            [maskBounds[0], maskBounds[1]]
+          ],
+          CAMPUS_CONFIG.boundary
+        ];
+
+        map.addSource('campus-mask', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: {
+              type: 'Polygon',
+              coordinates: invertedPolygon
+            },
+            properties: {}
+          }
+        });
+
+        map.addLayer({
+          id: 'campus-mask-fill',
+          type: 'fill',
+          source: 'campus-mask',
+          layout: {},
+          paint: {
+            'fill-color': isDarkMode ? '#1f2937' : '#ffffff',
+            'fill-opacity': 1.0
+          }
+        });
+      } else {
+        // Update mask color for dark mode
+        map.setPaintProperty('campus-mask-fill', 'fill-color', isDarkMode ? '#1f2937' : '#ffffff');
+      }
+
+      // Restore route if it exists
+      const routeSource = map.getSource('route');
+      if (routeSource && 'serialize' in routeSource) {
+        // Route source exists, just need to re-add the layer
+        if (!map.getLayer('route')) {
+          map.addLayer({
+            id: 'route',
+            type: 'line',
+            source: 'route',
+            layout: {
+              "line-join": 'round',
+              'line-cap': 'round'
+            },
+            paint: {
+              'line-color': '#3887be',
+              'line-width': 5,
+              'line-opacity': 0.75
+            }
+          });
         }
-      }, 50);
-      
-      return () => clearTimeout(timeoutId);
-    }
+      }
+
+      // Restore camera position
+      map.jumpTo({
+        center: currentCenter,
+        zoom: currentZoom
+      });
+    };
+
+    // Listen for style load completion
+    map.once('style.load', onStyleLoad);
+    
+    // Change the style
+    map.setStyle(newStyle);
+    
+    return () => {
+      map.off('style.load', onStyleLoad);
+    };
   }, [isDarkMode]);
 
-  // Update markers when selectedLocation changes
-  useEffect(() => {
-    if (mapInstanceRef.current && selectedLocation) {
-      // Center map on selected location WITHOUT zooming
-      mapInstanceRef.current.flyTo({
-        center: [selectedLocation.lng, selectedLocation.lat],
-        // Remove zoom parameter to maintain current zoom level
-        duration: 1000
-      });
-    }
-  }, [selectedLocation]);
+  // Note: Removed selectedLocation useEffect that was causing double flyTo calls
+  // The flyTo animation is now handled directly in marker click handlers
+  // This prevents duplicate transitions and map re-renders
 
   // Removed zoom update useEffect to prevent map reinitialization conflicts
+
+  // Add mock user location marker to map
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    // Remove existing user location marker if any
+    if (userLocationMarkerRef.current) {
+      userLocationMarkerRef.current.remove();
+    }
+
+    // Create user location marker element (blue dot with pulse animation)
+    const userMarkerElement = document.createElement('div');
+    userMarkerElement.className = 'user-location-marker';
+    userMarkerElement.style.cssText = `
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: #3b82f6;
+      border: 3px solid white;
+      box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
+      animation: pulse 2s infinite;
+    `;
+
+    // Add pulse animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Create and add the marker
+    const userMarker = new mapboxgl.Marker(userMarkerElement)
+      .setLngLat(MOCK_USER_LOCATION)
+      .addTo(mapInstanceRef.current);
+
+    userLocationMarkerRef.current = userMarker;
+
+    // Add hardcoded dummy building pin for testing
+    const dummyBuildingLocation: Location = {
+      id: 'test-building-dummy',
+      name: 'Test Building (Routing Demo)',
+      address: 'Test Location for Routing',
+      lat: -26.6875002,
+      lng: 27.0930933,
+      type: 'landmark'
+    };
+
+    // Create building marker element
+    const buildingMarkerElement = document.createElement('div');
+    buildingMarkerElement.className = 'custom-marker';
+    buildingMarkerElement.style.cssText = `
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid white;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #22c55e;
+    `;
+
+    const buildingIcon = document.createElement('div');
+    buildingIcon.innerHTML = '🏛️';
+    buildingIcon.style.fontSize = '16px';
+    buildingMarkerElement.appendChild(buildingIcon);
+
+    // Create the building marker
+    const buildingMarker = new mapboxgl.Marker(buildingMarkerElement)
+      .setLngLat([dummyBuildingLocation.lng, dummyBuildingLocation.lat])
+      .addTo(mapInstanceRef.current);
+
+    // Add click event to the building marker using ref
+    buildingMarkerElement.addEventListener('click', () => {
+      onLocationSelectRef.current(dummyBuildingLocation);
+      
+      // Center map on selected location but respect campus bounds
+      if (mapInstanceRef.current) {
+        const map = mapInstanceRef.current;
+        const currentZoom = map.getZoom();
+        const [west, south, east, north] = CAMPUS_CONFIG.bounds;
+        const targetLng = Math.max(west, Math.min(east, dummyBuildingLocation.lng));
+        const targetLat = Math.max(south, Math.min(north, dummyBuildingLocation.lat));
+        
+        // Smart zoom behavior:
+        // - If at minimum zoom (17), zoom in to 18.5 for smoother transition
+        // - Otherwise, maintain current zoom level
+        const targetZoom = currentZoom <= 17.1 ? 18.5 : currentZoom;
+        
+        map.flyTo({
+          center: [targetLng, targetLat],
+          zoom: targetZoom,
+          duration: 1000
+        });
+      }
+    });
+
+    // Store in markers ref so it gets cleaned up
+    markersRef.current.push(buildingMarker);
+
+    return () => {
+      if (userLocationMarkerRef.current) {
+        userLocationMarkerRef.current.remove();
+      }
+    };
+  }, []); // No dependencies - only run once when map is initialized
+
+  // Handle route calculation when requested
+  useEffect(() => {
+    if (!shouldCalculateRoute || !selectedLocation || !mapInstanceRef.current) return;
+
+    const calculateRoute = async () => {
+      try {
+        const accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
+        const destination: [number, number] = [selectedLocation.lng, selectedLocation.lat];
+        
+        console.log('🗺️ Calculating route from:', MOCK_USER_LOCATION, 'to:', destination);
+        
+        // Get route from mock user location to selected destination
+        const url = await axios.get(`https://api.mapbox.com/directions/v5/mapbox/walking/${MOCK_USER_LOCATION[0]},${MOCK_USER_LOCATION[1]};${destination[0]},${destination[1]}?alternatives=false&geometries=geojson&language=en&overview=full&steps=true&access_token=${accessToken}`)
+        const data = url.data.routes[0];
+        
+        const geojson: GeoJSON.Feature<GeoJSON.LineString> = {
+          type: 'Feature',
+          properties: {},
+          geometry: data.geometry
+        };
+
+        // Update or add the route source/layer
+        const map = mapInstanceRef.current;
+        const routeSource = map?.getSource('route');
+        if (map && routeSource && 'setData' in routeSource) {
+          routeSource.setData(geojson);
+        } else if (map) {
+          map.addSource('route', {
+            type: 'geojson',
+            data: geojson
+          });
+          map.addLayer({
+            id: 'route',
+            type: 'line',
+            source: 'route',
+            layout: {
+              "line-join": 'round',
+              'line-cap': 'round'
+            },
+            paint: {
+              'line-color': '#3887be',
+              'line-width': 5,
+              'line-opacity': 0.75
+            }
+          });
+        }
+
+        // Transform the Mapbox API response to Route interface
+        if (onRouteCalculated && selectedLocation) {
+          const route: Route = {
+            distance: data.distance,
+            duration: data.duration,
+            geometry: data.geometry,
+            steps: data.legs[0].steps.map((step: { maneuver: { instruction: string; type: string; modifier?: string }; distance: number; duration: number }) => ({
+              instruction: step.maneuver.instruction,
+              distance: step.distance,
+              duration: step.duration,
+              maneuver: {
+                type: step.maneuver.type,
+                modifier: step.maneuver.modifier
+              }
+            }))
+          };
+          
+          console.log('📦 Calling onRouteCalculated with transformed route:', route, 'destination:', selectedLocation);
+          onRouteCalculated(route, selectedLocation);
+        }
+
+      } catch (error) {
+        console.error('Error calculating route:', error);
+        alert('Failed to calculate route. Please try again.');
+        if (onRouteClear) {
+          onRouteClear();
+        }
+      }
+    };
+
+    calculateRoute();
+  }, [onRouteClear, selectedLocation, shouldCalculateRoute, onRouteCalculated]);
+
+  // Clear route when route is explicitly cleared (not when just selectedLocation changes)
+  useEffect(() => {
+    if (mapInstanceRef.current && currentRoute === null && !shouldCalculateRoute) {
+      // Only clear when currentRoute is explicitly null and we're not calculating a route
+      const map = mapInstanceRef.current;
+      if (map.getLayer('route')) {
+        map.removeLayer('route');
+      }
+      if (map.getSource('route')) {
+        map.removeSource('route');
+      }
+    }
+  }, [currentRoute, shouldCalculateRoute]);
 
   const handleMyLocationClick = () => {
     if (navigator.geolocation && mapInstanceRef.current) {
@@ -359,4 +693,7 @@ export function MapView({ onLocationSelect, selectedLocation, isDarkMode }: MapV
       </div>
     </div>
   );
-}
+};
+
+// Wrap with memo to prevent unnecessary re-renders
+export const MapView = memo(MapViewComponent);

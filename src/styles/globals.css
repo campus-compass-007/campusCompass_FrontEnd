@@ -27,6 +27,34 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* PWA-specific styles when in standalone mode */
+@media (display-mode: standalone) {
+  html, body {
+    /* Prevent pull-to-refresh */
+    overscroll-behavior-y: contain;
+    /* Prevent bounce effect */
+    overscroll-behavior: none;
+    /* Fixed positioning for app-like feel */
+    position: fixed;
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  /* Prevent text selection in PWA mode */
+  * {
+    -webkit-user-select: none;
+    user-select: none;
+    /* Prevent touch callout on iOS */
+    -webkit-touch-callout: none;
+  }
+  
+  /* Re-enable text selection for input fields */
+  input, textarea, select, [contenteditable="true"] {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
+}
+
 /* Only hide overflow for the app routes */
 body.app-route {
   overflow: hidden;

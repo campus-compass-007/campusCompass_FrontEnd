@@ -2,24 +2,44 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     
     <!-- PWA Configuration -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#6c3d91" />
     <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- iOS PWA Configuration -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="CampusCompass" />
+    
+    <!-- Disable iOS Safari UI elements -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-touch-fullscreen" content="yes" />
+    
+    <!-- iOS Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/ios/180.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/ios/167.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/ios/152.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/icons/ios/120.png" />
+    <link rel="apple-touch-icon" sizes="76x76" href="/icons/ios/76.png" />
+    
+    <!-- iOS Splash Screens -->
+    <link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" href="/icons/ios/1024.png" />
+    <link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" href="/icons/ios/1024.png" />
+    <link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" href="/icons/ios/1024.png" />
+    <link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" href="/icons/ios/1024.png" />
+    <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" href="/icons/ios/1024.png" />
     
     <!-- SEO and Description -->
     <title>CampusCompass - NWU Potchefstroom Campus Navigation</title>
     <meta name="description" content="Navigate North West University Potchefstroom Campus with ease. Interactive maps, building locations, and emergency contacts." />
     <meta name="keywords" content="NWU, North West University, Potchefstroom, campus, navigation, map, students" />
     
-    <!-- Icons -->
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <!-- Standard Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/ios/32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/ios/16.png" />
     
     <!-- Mapbox CSS -->
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css' rel='stylesheet' />

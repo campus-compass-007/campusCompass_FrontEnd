@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MapView } from './components/MapView';
 import { BottomSheet } from './components/BottomSheet';
 import { BuildingsMenu } from './components/BuildingsMenu';
@@ -6,7 +6,9 @@ import { ContactsMenu } from './components/ContactsMenu';
 import { BottomNav } from './components/BottomNav';
 import { TopNav } from './components/TopNav';
 import { PWAUpdateNotification } from './components/PWAUpdateNotification';
+import { DirectionsPanel } from './components/DirectionsPanel';
 import { Location } from './types';
+import { Route } from './services/routingService';
 
 export default function App() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -15,6 +17,9 @@ export default function App() {
   const [showBuildingsMenu, setShowBuildingsMenu] = useState(false);
   const [showContactsMenu, setShowContactsMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentRoute, setCurrentRoute] = useState<Route | null>(null);
+  const [routeDestination, setRouteDestination] = useState<Location | null>(null);
+  const [shouldCalculateRoute, setShouldCalculateRoute] = useState(false);
 
   // Apply dark mode class to document element with smooth transition
   useEffect(() => {
@@ -32,13 +37,37 @@ export default function App() {
     void htmlElement.offsetHeight;
   }, [isDarkMode]);
 
-  const handleLocationSelect = (location: Location) => {
+  const handleLocationSelect = useCallback((location: Location) => {
     setSelectedLocation(location);
-  };
+  }, []);
 
-  const handleCloseBottomSheet = () => {
+  const handleCloseBottomSheet = useCallback(() => {
     setSelectedLocation(null);
-  };
+    setShouldCalculateRoute(false);
+    setCurrentRoute(null);
+    setRouteDestination(null);
+  }, []);
+
+  const handleNavigate = useCallback((location: Location) => {
+    setShouldCalculateRoute(true);
+    setRouteDestination(location);
+  }, []);
+
+  const handleRouteCalculated = useCallback((route: Route, destination: Location) => {
+    console.log('📍 App: Route calculated callback triggered', route, destination);
+    setCurrentRoute(route);
+    setRouteDestination(destination);
+    setShouldCalculateRoute(false);
+    console.log('📍 App: Current route state updated');
+    // Close the bottom sheet when route is shown
+    setSelectedLocation(null);
+  }, []);
+
+  const handleCloseDirections = useCallback(() => {
+    setCurrentRoute(null);
+    setRouteDestination(null);
+    setShouldCalculateRoute(false);
+  }, []);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -96,6 +125,10 @@ export default function App() {
           onLocationSelect={handleLocationSelect}
           selectedLocation={selectedLocation}
           isDarkMode={isDarkMode}
+          onRouteCalculated={handleRouteCalculated}
+          shouldCalculateRoute={shouldCalculateRoute}
+          onRouteClear={handleCloseDirections}
+          currentRoute={currentRoute}
         />
       </div>
 
@@ -104,6 +137,7 @@ export default function App() {
         location={selectedLocation}
         onClose={handleCloseBottomSheet}
         isDarkMode={isDarkMode}
+        onNavigate={handleNavigate}
       />
 
       {/* Buildings Menu */}
@@ -111,6 +145,7 @@ export default function App() {
         isOpen={showBuildingsMenu}
         onClose={handleCloseBuildingsMenu}
         searchQuery={searchQuery}
+        onLocationSelect={handleLocationSelect}
       />
 
       {/* Contacts Menu */}
@@ -129,6 +164,14 @@ export default function App() {
 
       {/* PWA Update Notification */}
       <PWAUpdateNotification />
+
+      {/* Directions Panel */}
+      <DirectionsPanel
+        route={currentRoute}
+        onClose={handleCloseDirections}
+        isDarkMode={isDarkMode}
+        destinationName={routeDestination?.name}
+      />
     </div>
   );
 }

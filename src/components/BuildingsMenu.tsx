@@ -1,25 +1,14 @@
 import { useEffect, useState } from 'react';
 import { X, ChevronRight } from 'lucide-react';
-import { Building, Office } from '../types';
+import { Office, Location } from '../types';
 import axios from 'axios';
 
 interface BuildingsMenuProps {
   isOpen: boolean;
   onClose: () => void;
   searchQuery?: string;
+  onLocationSelect: (location: Location) => void;
 }
-
-
-const mockBuildings: Building[] = [
-  { id: '1', name: 'Building 1', description: 'Main Academic Building', image: '/api/placeholder/60/60' },
-  { id: '2', name: 'Building 2', description: 'Science Laboratory Complex', image: '/api/placeholder/60/60' },
-  { id: '3', name: 'Building 3', description: 'Student Center', image: '/api/placeholder/60/60' },
-  { id: '4', name: 'Building 4', description: 'Library and Research Center', image: '/api/placeholder/60/60' },
-  { id: '5', name: 'Building 5', description: 'Engineering Hall', image: '/api/placeholder/60/60' },
-  { id: '6', name: 'Building 6', description: 'Arts and humanities', image: '/api/placeholder/60/60' },
-  { id: '7', name: 'Building 7', description: 'Sports Complex', image: '/api/placeholder/60/60' },
-  { id: '8', name: 'Building 8', description: 'Dormitory A', image: '/api/placeholder/60/60' },
-];
 
 const mockOffices: Office[] = [
   { id: '1', officeNumber: 'A101', lecturer: 'Prof. John Smith', department: 'Computer Science' },
@@ -32,8 +21,8 @@ const mockOffices: Office[] = [
   { id: '8', officeNumber: 'D402', lecturer: 'Dr. Jennifer White', department: 'English Literature' },
 ];
 
-export function BuildingsMenu({ isOpen, onClose, searchQuery = '' }: BuildingsMenuProps) {
-  const [buildings,setBuildings] = useState([])
+export function BuildingsMenu({ isOpen, onClose, searchQuery = '', onLocationSelect }: BuildingsMenuProps) {
+  const [buildings,setBuildings] = useState<any[]>([])
   useEffect(()=>{
     axios.get(`http://${import.meta.env.VITE_API_GATEWAY_URL}/api/buildings`).then((res) => {
       setBuildings(res.data)
@@ -51,9 +40,21 @@ export function BuildingsMenu({ isOpen, onClose, searchQuery = '' }: BuildingsMe
     office.department.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleBuildingSelect = (building: Building) => {
-    console.log('Selected building:', building);
-    // Here we would navigate to the building location on the map
+  const handleBuildingSelect = (building: any) => {
+    // Convert building to Location format
+    const location: Location = {
+      id: building._id || building.id,
+      name: building.name,
+      address: building.address || building.description || 'Campus Building',
+      lat: building.lat,
+      lng: building.lng,
+      type: building.type || 'landmark'
+    };
+    
+    // Trigger location selection (this will show the marker and open BottomSheet)
+    onLocationSelect(location);
+    
+    // Close the buildings menu
     onClose();
   };
 

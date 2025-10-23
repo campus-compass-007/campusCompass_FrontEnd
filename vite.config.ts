@@ -8,39 +8,13 @@ export default defineConfig(({ command }) => ({
     react(),
     VitePWA({
       registerType: 'prompt',
+      injectRegister: 'auto',
       // Disable service worker in development
       disable: command === 'serve',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
-      manifest: {
-        name: 'CampusCompass - NWU Potchefstroom Navigation',
-        short_name: 'CampusCompass',
-        description: 'Navigate North West University Potchefstroom Campus with ease',
-        theme_color: '#6c3d91',
-        background_color: '#6c3d91',
-        display: 'standalone',
-        orientation: 'portrait',
-        scope: '/app/',
-        start_url: '/app',
-        icons: [
-          {
-            src: 'icons/icon-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'icons/icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: 'icons/icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
-      },
+      includeAssets: ['icons/**/*.png', 'manifest.json'],
+      manifest: false, // Use the manifest.json file in Public folder
       workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.mapbox\.com/,
@@ -50,17 +24,42 @@ export default defineConfig(({ command }) => ({
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 24 * 60 * 60 // 24 hours
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
               }
             }
           },
           {
-            urlPattern: /^\/app/,
-            handler: 'StaleWhileRevalidate',
+            urlPattern: /^https:\/\/.*\.tile\.openstreetmap\.org/,
+            handler: 'CacheFirst',
             options: {
-              cacheName: 'app-pages',
+              cacheName: 'map-tiles',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
+              }
+            }
+          },
+          {
+            urlPattern: ({ request }) => request.destination === 'document',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'documents',
               expiration: {
                 maxEntries: 20,
                 maxAgeSeconds: 7 * 24 * 60 * 60 // 7 days
+              }
+            }
+          },
+          {
+            urlPattern: ({ request }) => request.destination === 'image',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
               }
             }
           }
